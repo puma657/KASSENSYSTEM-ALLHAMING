@@ -1,0 +1,726 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Kassensystem</title>
+  <style>
+    :root {
+      --bg: #f4f6f8;
+      --panel: #ffffff;
+      --ink: #1f2933;
+      --muted: #667085;
+      --line: #d7dde5;
+      --primary: #0f766e;
+      --primary-dark: #0b5f59;
+      --accent: #2563eb;
+      --danger: #b42318;
+      --ok: #157347;
+      --shadow: 0 12px 30px rgba(31, 41, 51, 0.12);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: Arial, Helvetica, sans-serif;
+      color: var(--ink);
+      background: var(--bg);
+    }
+
+    header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      min-height: 64px;
+      padding: 12px 18px;
+      background: var(--panel);
+      border-bottom: 1px solid var(--line);
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(22px, 3vw, 34px);
+      line-height: 1.15;
+    }
+
+    h2 {
+      margin: 0 0 14px;
+      font-size: 24px;
+    }
+
+    p {
+      margin: 0;
+      color: var(--muted);
+    }
+
+    main {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 24px 18px 96px;
+    }
+
+    .page {
+      display: none;
+    }
+
+    .page.active {
+      display: block;
+    }
+
+    .topline {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 18px;
+      margin-bottom: 18px;
+    }
+
+    .panel {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      box-shadow: var(--shadow);
+      padding: 18px;
+    }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: 1fr 180px auto;
+      gap: 12px;
+      align-items: end;
+      margin-top: 18px;
+    }
+
+    label {
+      display: grid;
+      gap: 6px;
+      color: var(--muted);
+      font-size: 14px;
+      font-weight: 700;
+    }
+
+    input {
+      width: 100%;
+      min-height: 46px;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      padding: 10px 12px;
+      font-size: 18px;
+      color: var(--ink);
+      background: #fff;
+    }
+
+    button {
+      border: 0;
+      border-radius: 6px;
+      min-height: 46px;
+      padding: 10px 16px;
+      font-size: 17px;
+      font-weight: 700;
+      cursor: pointer;
+      color: #fff;
+      background: var(--primary);
+    }
+
+    button:hover {
+      background: var(--primary-dark);
+    }
+
+    button.secondary {
+      background: var(--accent);
+    }
+
+    button.secondary:hover {
+      background: #1d4ed8;
+    }
+
+    button.light {
+      color: var(--ink);
+      background: #eef2f7;
+      border: 1px solid var(--line);
+    }
+
+    button.light:hover {
+      background: #e1e7ef;
+    }
+
+    button.danger {
+      background: var(--danger);
+    }
+
+    button.danger:hover {
+      background: #8f1c13;
+    }
+
+    .back-button {
+      width: 46px;
+      min-width: 46px;
+      height: 46px;
+      padding: 0;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      font-size: 26px;
+      line-height: 1;
+      background: #334155;
+    }
+
+    .back-button.visible {
+      display: inline-flex;
+    }
+
+    .list {
+      display: grid;
+      gap: 10px;
+      margin-top: 18px;
+    }
+
+    .product-row,
+    .cart-row {
+      display: grid;
+      grid-template-columns: 1fr auto auto;
+      gap: 12px;
+      align-items: center;
+      padding: 12px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fbfcfe;
+    }
+
+    .money-grid,
+    .product-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+      gap: 12px;
+      margin-top: 18px;
+    }
+
+    .product-choice,
+    .money-choice {
+      min-height: 86px;
+      text-align: left;
+      background: var(--panel);
+      color: var(--ink);
+      border: 1px solid var(--line);
+      box-shadow: 0 4px 12px rgba(31, 41, 51, 0.08);
+    }
+
+    .product-choice:hover,
+    .money-choice:hover {
+      background: #ecfdf5;
+      border-color: var(--primary);
+      color: var(--ink);
+    }
+
+    .product-name {
+      display: block;
+      font-size: 18px;
+      overflow-wrap: anywhere;
+    }
+
+    .product-price {
+      display: block;
+      margin-top: 6px;
+      color: var(--primary);
+      font-size: 16px;
+    }
+
+    .summary {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+      margin: 18px 0;
+    }
+
+    .summary-box {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 16px;
+    }
+
+    .summary-box strong {
+      display: block;
+      margin-top: 6px;
+      font-size: clamp(24px, 4vw, 38px);
+      color: var(--ink);
+    }
+
+    .finish-bar {
+      position: fixed;
+      right: 18px;
+      bottom: 18px;
+      z-index: 20;
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+
+    .finish-bar button {
+      min-width: 150px;
+      box-shadow: var(--shadow);
+    }
+
+    .notice {
+      margin-top: 14px;
+      padding: 12px;
+      border-radius: 8px;
+      background: #fff7ed;
+      color: #9a3412;
+      border: 1px solid #fed7aa;
+      display: none;
+    }
+
+    .notice.show {
+      display: block;
+    }
+
+    .success {
+      color: var(--ok);
+    }
+
+    @media (max-width: 720px) {
+      main {
+        padding-inline: 12px;
+      }
+
+      .topline,
+      .form-grid,
+      .product-row,
+      .cart-row,
+      .summary {
+        grid-template-columns: 1fr;
+      }
+
+      .topline {
+        display: grid;
+      }
+
+      .finish-bar {
+        left: 12px;
+        right: 12px;
+      }
+
+      .finish-bar button {
+        width: 100%;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <button id="backButton" class="back-button" type="button" aria-label="Zurück">‹</button>
+    <h1 id="pageTitle">Produkte anlegen</h1>
+  </header>
+
+  <main>
+    <section id="setupPage" class="page active">
+      <div class="panel">
+        <div class="topline">
+          <div>
+            <h2>Produkt hinzufügen</h2>
+            <p>Gib den Produktnamen und den Preis ein. Danach kannst du alle Produkte zum Kassieren verwenden.</p>
+          </div>
+        </div>
+
+        <div class="form-grid">
+          <label>
+            Produktname
+            <input id="productName" type="text" placeholder="z. B. Apfel" autocomplete="off" />
+          </label>
+          <label>
+            Preis in Euro
+            <input id="productPrice" type="number" min="0" step="0.01" placeholder="1,50" />
+          </label>
+          <button id="addProductButton" type="button">Hinzufügen</button>
+        </div>
+
+        <div id="setupNotice" class="notice"></div>
+        <div id="productList" class="list"></div>
+      </div>
+    </section>
+
+    <section id="salesPage" class="page">
+      <div class="topline">
+        <div>
+          <h2>Produkte auswählen</h2>
+          <p>Drücke auf ein Produkt, um es zum aktuellen Einkauf hinzuzufügen.</p>
+        </div>
+        <button id="clearCartButton" class="light" type="button">Einkauf leeren</button>
+      </div>
+
+      <div id="productButtons" class="product-grid"></div>
+
+      <div class="panel" style="margin-top: 20px;">
+        <h2>Aktueller Einkauf</h2>
+        <div id="cartList" class="list"></div>
+      </div>
+    </section>
+
+    <section id="paymentPage" class="page">
+      <div class="topline">
+        <div>
+          <h2>Bezahlung</h2>
+          <p>Wähle aus, wie viel Geld der Kunde gibt.</p>
+        </div>
+      </div>
+
+      <div class="summary">
+        <div class="summary-box">
+          Gesamt
+          <strong id="paymentTotal">0,00 €</strong>
+        </div>
+        <div class="summary-box">
+          Gegeben
+          <strong id="paidAmount">0,00 €</strong>
+        </div>
+        <div class="summary-box">
+          Wechselgeld
+          <strong id="changeAmount">0,00 €</strong>
+        </div>
+      </div>
+
+      <div id="paymentNotice" class="notice"></div>
+      <div id="moneyButtons" class="money-grid"></div>
+    </section>
+  </main>
+
+  <div class="finish-bar">
+    <button id="finishButton" type="button">Fertig</button>
+  </div>
+
+  <script>
+    const pages = {
+      setup: document.getElementById("setupPage"),
+      sales: document.getElementById("salesPage"),
+      payment: document.getElementById("paymentPage")
+    };
+
+    const pageTitle = document.getElementById("pageTitle");
+    const backButton = document.getElementById("backButton");
+    const finishButton = document.getElementById("finishButton");
+    const productNameInput = document.getElementById("productName");
+    const productPriceInput = document.getElementById("productPrice");
+    const addProductButton = document.getElementById("addProductButton");
+    const productList = document.getElementById("productList");
+    const productButtons = document.getElementById("productButtons");
+    const cartList = document.getElementById("cartList");
+    const clearCartButton = document.getElementById("clearCartButton");
+    const moneyButtons = document.getElementById("moneyButtons");
+    const paymentTotal = document.getElementById("paymentTotal");
+    const paidAmount = document.getElementById("paidAmount");
+    const changeAmount = document.getElementById("changeAmount");
+    const setupNotice = document.getElementById("setupNotice");
+    const paymentNotice = document.getElementById("paymentNotice");
+
+    const moneyOptions = [0.05, 0.10, 0.20, 0.50, 1, 2, 5, 10, 20, 50, 100];
+    let currentPage = "setup";
+    let products = [];
+    let cart = [];
+    let paid = 0;
+
+    function euro(value) {
+      return value.toLocaleString("de-AT", {
+        style: "currency",
+        currency: "EUR"
+      });
+    }
+
+    function showNotice(element, message) {
+      element.textContent = message;
+      element.classList.add("show");
+    }
+
+    function hideNotice(element) {
+      element.textContent = "";
+      element.classList.remove("show");
+    }
+
+    function setPage(page) {
+      currentPage = page;
+      Object.values(pages).forEach((pageElement) => pageElement.classList.remove("active"));
+      pages[page].classList.add("active");
+
+      pageTitle.textContent = {
+        setup: "Produkte anlegen",
+        sales: "Kassieren",
+        payment: "Bezahlung"
+      }[page];
+
+      backButton.classList.toggle("visible", page !== "setup");
+      finishButton.textContent = page === "payment" && paid >= getCartTotal() ? "Fertig" : "Fertig";
+
+      if (page === "sales") {
+        renderSales();
+      }
+
+      if (page === "payment") {
+        renderPayment();
+      }
+    }
+
+    function getCartTotal() {
+      return cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
+    }
+
+    function addProduct() {
+      const name = productNameInput.value.trim();
+      const price = Number(productPriceInput.value.replace(",", "."));
+
+      if (!name) {
+        showNotice(setupNotice, "Bitte gib einen Produktnamen ein.");
+        return;
+      }
+
+      if (!Number.isFinite(price) || price <= 0) {
+        showNotice(setupNotice, "Bitte gib einen gültigen Preis ein.");
+        return;
+      }
+
+      hideNotice(setupNotice);
+      products.push({
+        id: Date.now().toString(),
+        name,
+        price: Math.round(price * 100) / 100
+      });
+
+      productNameInput.value = "";
+      productPriceInput.value = "";
+      productNameInput.focus();
+      renderProductList();
+    }
+
+    function removeProduct(id) {
+      products = products.filter((product) => product.id !== id);
+      cart = cart.filter((item) => item.id !== id);
+      renderProductList();
+    }
+
+    function renderProductList() {
+      if (products.length === 0) {
+        productList.innerHTML = "<p>Noch keine Produkte angelegt.</p>";
+        return;
+      }
+
+      productList.innerHTML = "";
+      products.forEach((product) => {
+        const row = document.createElement("div");
+        row.className = "product-row";
+        row.innerHTML = `
+          <strong>${escapeHtml(product.name)}</strong>
+          <span>${euro(product.price)}</span>
+        `;
+
+        const deleteButton = document.createElement("button");
+        deleteButton.className = "danger";
+        deleteButton.type = "button";
+        deleteButton.textContent = "Löschen";
+        deleteButton.addEventListener("click", () => removeProduct(product.id));
+
+        row.appendChild(deleteButton);
+        productList.appendChild(row);
+      });
+    }
+
+    function renderSales() {
+      productButtons.innerHTML = "";
+      products.forEach((product) => {
+        const button = document.createElement("button");
+        button.className = "product-choice";
+        button.type = "button";
+        button.innerHTML = `
+          <span class="product-name">${escapeHtml(product.name)}</span>
+          <span class="product-price">${euro(product.price)}</span>
+        `;
+        button.addEventListener("click", () => addToCart(product));
+        productButtons.appendChild(button);
+      });
+
+      renderCart();
+    }
+
+    function addToCart(product) {
+      const existingItem = cart.find((item) => item.id === product.id);
+
+      if (existingItem) {
+        existingItem.quantity += 1;
+      } else {
+        cart.push({ ...product, quantity: 1 });
+      }
+
+      renderCart();
+    }
+
+    function changeQuantity(id, amount) {
+      const item = cart.find((cartItem) => cartItem.id === id);
+      if (!item) return;
+
+      item.quantity += amount;
+      if (item.quantity <= 0) {
+        cart = cart.filter((cartItem) => cartItem.id !== id);
+      }
+
+      renderCart();
+    }
+
+    function renderCart() {
+      if (cart.length === 0) {
+        cartList.innerHTML = "<p>Der Einkauf ist noch leer.</p>";
+        return;
+      }
+
+      cartList.innerHTML = "";
+      cart.forEach((item) => {
+        const row = document.createElement("div");
+        row.className = "cart-row";
+        row.innerHTML = `
+          <strong>${item.quantity} × ${escapeHtml(item.name)}</strong>
+          <span>${euro(item.price * item.quantity)}</span>
+        `;
+
+        const controls = document.createElement("div");
+        controls.style.display = "flex";
+        controls.style.gap = "8px";
+
+        const minus = document.createElement("button");
+        minus.className = "light";
+        minus.type = "button";
+        minus.textContent = "-";
+        minus.addEventListener("click", () => changeQuantity(item.id, -1));
+
+        const plus = document.createElement("button");
+        plus.className = "light";
+        plus.type = "button";
+        plus.textContent = "+";
+        plus.addEventListener("click", () => changeQuantity(item.id, 1));
+
+        controls.append(minus, plus);
+        row.appendChild(controls);
+        cartList.appendChild(row);
+      });
+
+      const totalRow = document.createElement("div");
+      totalRow.className = "cart-row";
+      totalRow.innerHTML = `<strong>Gesamt</strong><strong>${euro(getCartTotal())}</strong><span></span>`;
+      cartList.appendChild(totalRow);
+    }
+
+    function renderPayment() {
+      const total = getCartTotal();
+      const change = Math.max(0, paid - total);
+
+      paymentTotal.textContent = euro(total);
+      paidAmount.textContent = euro(paid);
+      changeAmount.textContent = euro(change);
+
+      if (paid > 0 && paid < total) {
+        showNotice(paymentNotice, "Der gegebene Betrag reicht noch nicht aus.");
+      } else {
+        hideNotice(paymentNotice);
+      }
+
+      moneyButtons.innerHTML = "";
+      moneyOptions.forEach((amount) => {
+        const button = document.createElement("button");
+        button.className = "money-choice";
+        button.type = "button";
+        button.textContent = euro(amount);
+        button.addEventListener("click", () => {
+          paid = Math.round((paid + amount) * 100) / 100;
+          renderPayment();
+        });
+        moneyButtons.appendChild(button);
+      });
+
+      const exactButton = document.createElement("button");
+      exactButton.className = "money-choice secondary";
+      exactButton.type = "button";
+      exactButton.textContent = "Passend";
+      exactButton.addEventListener("click", () => {
+        paid = total;
+        renderPayment();
+      });
+
+      const resetButton = document.createElement("button");
+      resetButton.className = "money-choice danger";
+      resetButton.type = "button";
+      resetButton.textContent = "Geld löschen";
+      resetButton.addEventListener("click", () => {
+        paid = 0;
+        renderPayment();
+      });
+
+      moneyButtons.append(exactButton, resetButton);
+    }
+
+    function finish() {
+      if (currentPage === "setup") {
+        if (products.length === 0) {
+          showNotice(setupNotice, "Bitte lege zuerst mindestens ein Produkt an.");
+          return;
+        }
+        hideNotice(setupNotice);
+        setPage("sales");
+        return;
+      }
+
+      if (currentPage === "sales") {
+        if (cart.length === 0) {
+          return;
+        }
+        paid = 0;
+        setPage("payment");
+        return;
+      }
+
+      if (currentPage === "payment") {
+        if (paid < getCartTotal()) {
+          showNotice(paymentNotice, "Bitte wähle genug Geld aus, bevor du abschließt.");
+          return;
+        }
+        cart = [];
+        paid = 0;
+        setPage("sales");
+      }
+    }
+
+    function goBack() {
+      if (currentPage === "payment") {
+        setPage("sales");
+      } else if (currentPage === "sales") {
+        setPage("setup");
+      }
+    }
+
+    function escapeHtml(text) {
+      const element = document.createElement("span");
+      element.textContent = text;
+      return element.innerHTML;
+    }
+
+    addProductButton.addEventListener("click", addProduct);
+    productNameInput.addEventListener("keydown", (event) => {
+      if (event.key === "Enter") productPriceInput.focus();
+    });
+    productPriceInput.addEventListener("keydown", (event) => {
+      if (event.key === "Enter") addProduct();
+    });
+    finishButton.addEventListener("click", finish);
+    backButton.addEventListener("click", goBack);
+    clearCartButton.addEventListener("click", () => {
+      cart = [];
+      renderCart();
+    });
+
+    renderProductList();
+  </script>
+</body>
+</html>
